@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football League</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #343a40;
+            color: white;
+            padding: 10px 0;
+            text-align: center;
+        }
+        nav {
+            background-color: #343a40;
+            overflow: hidden;
+        }
+        nav a {
+            float: left;
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+        }
+        nav a:hover {
+            background-color: #495057;
+        }
+        .container {
+            padding: 20px;
+        }
+        .hidden { display: none; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        .match { margin-bottom: 15px; }
+        form {
+            margin-top: 20px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        button {
+            background-color: #343a40;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #495057;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Football League</h1>
+    </header>
+    <nav>
+        <a href="#inputClub" onclick="showForm('inputClubForm')">Input Data Klub</a>
+        <a href="#inputSingleMatch" onclick="showForm('inputSingleMatchForm')">Input Skor Pertandingan - Single Match</a>
+        <a href="#inputMultipleMatches" onclick="showForm('inputMultipleMatchesForm')">Input Skor Pertandingan - Multiple Matches</a>
+        <a href="#standings">Tampilan Klasemen</a>
+    </nav>
+    <div class="container">
+        <!-- Input Data Klub -->
+        <form id="inputClubForm" class="hidden">
+            <h2>Input Data Klub</h2>
+            <label for="clubName">Nama Klub:</label>
+            <input type="text" id="clubName" required>
+            <label for="clubCity">Kota Klub:</label>
+            <input type="text" id="clubCity" required>
+            <button type="button" onclick="addClub()">SAVE</button>
+        </form>
+
+        <!-- Input Skor Pertandingan - Single Match -->
+        <form id="inputSingleMatchForm" class="hidden">
+            <h2>Input Skor Pertandingan - Single Match</h2>
+            <label for="club1_single">Klub 1:</label>
+            <input type="text" id="club1_single" required>
+            <label for="club2_single">Klub 2:</label>
+            <input type="text" id="club2_single" required>
+            <label for="score1_single">Score Klub 1:</label>
+            <input type="number" id="score1_single" required>
+            <label for="score2_single">Score Klub 2:</label>
+            <input type="number" id="score2_single" required>
+            <button type="button" onclick="saveSingleMatch()">SAVE</button>
+        </form>
+
+        <!-- Input Skor Pertandingan - Multiple Matches -->
+        <form id="inputMultipleMatchesForm" class="hidden">
+            <h2>Input Skor Pertandingan - Multiple Matches</h2>
+            <div id="multipleMatchesContainer">
+                <div class="match">
+                    <label for="club1_1">Klub 1:</label>
+                    <input type="text" class="club1" id="club1_1" required>
+                    <label for="club2_1">Klub 2:</label>
+                    <input type="text" class="club2" id="club2_1" required>
+                    <label for="score1_1">Score Klub 1:</label>
+                    <input type="number" class="score1" id="score1_1" required>
+                    <label for="score2_1">Score Klub 2:</label>
+                    <input type="number" class="score2" id="score2_1" required>
+                </div>
+            </div>
+            <button type="button" onclick="addMatch()">Add Match</button>
+            <button type="button" onclick="saveMultipleMatches()">SAVE</button>
+        </form>
+
+        <!-- View Klasemen -->
+        <div id="standings">
+            <h2>Tampilan Klasemen</h2>
+            <table id="standingsTable">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Klub</th>
+                        <th>Ma</th>
+                        <th>Me</th>
+                        <th>S</th>
+                        <th>K</th>
+                        <th>GM</th>
+                        <th>GK</th>
+                        <th>Point</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let clubs = [];
+        let matches = [];
+        let matchCount = 1;
+
+        function showForm(formId) {
+            document.querySelectorAll('form').forEach(form => form.classList.add('hidden'));
+            document.getElementById(formId).classList.remove('hidden');
+        }
+
+        function addClub() {
+            const name = document.getElementById('clubName').value;
+            const city = document.getElementById('clubCity').value;
+            if (!name || !city) return alert('Silakan isi semua kolom terlebih dahulu !!');
+            if (clubs.some(club => club.name === name)) return alert('Club sudah muncul');
+            clubs.push({ name, city, matchesPlayed: 0, matchesWon: 0, matchesDrawn: 0, matchesLost: 0, goalsScored: 0, goalsConceded: 0, points: 0 });
+            document.getElementById('clubName').value = '';
+            document.getElementById('clubCity').value = '';
+            updateStandings();
+        }
+
+        function saveSingleMatch() {
+            const club1 = document.getElementById('club1_single').value;
+            const club2 = document.getElementById('club2_single').value;
+            const score1 = parseInt(document.getElementById('score1_single').value);
+            const score2 = parseInt(document.getElementById('score2_single').value);
+
+            if (!club1 || !club2 || isNaN(score1) || isNaN(score2)) return alert('Silakan isi semua kolom terlebih dahulu !!');
+            if (matches.some(m => m.club1 === club1 && m.club2 === club2 && m.score1 === score1 && m.score2 === score2)) return alert('Score sudah muncul');
+
+            matches.push({ club1, club2, score1, score2 });
+
+            document.getElementById('club1_single').value = '';
+            document.getElementById('club2_single').value = '';
+            document.getElementById('score1_single').value = '';
+            document.getElementById('score2_single').value = '';
+
+            updateStandings();
+        }
+
+        function addMatch() {
+            matchCount++;
+            const matchDiv = document.createElement('div');
+            matchDiv.classList.add('match');
+            matchDiv.innerHTML = `
+                <label for="club1_${matchCount}">Klub ${matchCount * 2 - 1}:</label>
+                <input type="text" class="club1" id="club1_${matchCount}" required>
+                <label for="club2_${matchCount}">Klub ${matchCount * 2}:</label>
+                <input type="text" class="club2" id="club2_${matchCount}" required>
+                <label for="score1_${matchCount}">Score Klub ${matchCount * 2 - 1}:</label>
+                <input type="number" class="score1" id="score1_${matchCount}" required>
+                <label for="score2_${matchCount}">Score Klub ${matchCount * 2}:</label>
+                <input type="number" class="score2" id="score2_${matchCount}" required>
+            `;
+            document.getElementById('multipleMatchesContainer').appendChild(matchDiv);
+        }
+
+        function saveMultipleMatches() {
+            const matchElements = document.querySelectorAll('.match');
+            matchElements.forEach(match => {
+                const club1 = match.querySelector('.club1').value;
+                const club2 = match.querySelector('.club2').value;
+                const score1 = parseInt(match.querySelector('.score1').value);
+                const score2 = parseInt(match.querySelector('.score2').value);
+
+                if (!club1 || !club2 || isNaN(score1) || isNaN(score2)) return alert('Silakan isi semua kolom terlebih dahulu !!');
+                if (matches.some(m => m.club1 === club1 && m.club2 === club2 && m.score1 === score1 && m.score2 === score2)) return alert('Score sudah muncul');
+
+                matches.push({ club1, club2, score1, score2 });
+
+                // Clear input fields
+                match.querySelector('.club1').value = '';
+                match.querySelector('.club2').value = '';
+                match.querySelector('.score1').value = '';
+                match.querySelector('.score2').value = '';
+            });
+
+            updateStandings();
+        }
+
+        function updateStandings() {
+            const standings = {};
+
+            clubs.forEach(club => {
+                standings[club.name] = { ...club };
+            });
+
+            matches.forEach(match => {
+                const { club1, club2, score1, score2 } = match;
+
+                if (!standings[club1] || !standings[club2]) return;
+
+                standings[club1].matchesPlayed++;
+                standings[club2].matchesPlayed++;
+                standings[club1].goalsScored += score1;
+                standings[club1].goalsConceded += score2;
+                standings[club2].goalsScored += score2;
+                standings[club2].goalsConceded += score1;
+
+                if (score1 > score2) {
+                    standings[club1].matchesWon++;
+                    standings[club2].matchesLost++;
+                    standings[club1].points += 3;
+                } else if (score1 < score2) {
+                    standings[club2].matchesWon++;
+                    standings[club1].matchesLost++;
+                    standings[club2].points += 3;
+                } else {
+                    standings[club1].matchesDrawn++;
+                    standings[club2].matchesDrawn++;
+                    standings[club1].points++;
+                    standings[club2].points++;
+                }
+            });
+
+            const tableBody = document.querySelector('#standingsTable tbody');
+            tableBody.innerHTML = '';
+
+            let index = 1;
+            Object.keys(standings).forEach(clubName => {
+                const club = standings[clubName];
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index++}</td>
+                    <td>${club.name}</td>
+                    <td>${club.matchesPlayed}</td>
+                    <td>${club.matchesWon}</td>
+                    <td>${club.matchesDrawn}</td>
+                    <td>${club.matchesLost}</td>
+                    <td>${club.goalsScored}</td>
+                    <td>${club.goalsConceded}</td>
+                    <td>${club.points}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+    </script>
+</body>
+</html>
